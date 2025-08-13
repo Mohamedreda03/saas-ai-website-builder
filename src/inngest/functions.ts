@@ -1,9 +1,16 @@
-import { openai, createAgent } from "@inngest/agent-kit";
+import {
+  openai,
+  createAgent,
+  createTool,
+  createNetwork,
+} from "@inngest/agent-kit";
 
 import { Sandbox } from "@e2b/code-interpreter";
 
 import { inngest } from "./client";
-import { getSandbox } from "./utils";
+import { getSandbox, lastAssestantTextMessageContent } from "./utils";
+import { PROMPT } from "@/prompt";
+import { z } from "zod";
 
 export const chat = inngest.createFunction(
   { id: "hello-world" },
@@ -16,30 +23,141 @@ export const chat = inngest.createFunction(
     });
 
     const codeAgent = createAgent({
-      name: "coder",
-      system:
-        "You are an expert Next.js developer specializing in creating custom components. You excel at:\n" +
-        "- Building reusable React components with TypeScript\n" +
-        "- Implementing modern Next.js patterns (App Router, Server Components, Client Components)\n" +
-        "- Using Tailwind CSS for styling and responsive design\n" +
-        "- Integrating with shadcn/ui components and design systems\n" +
-        "- Optimizing performance with Next.js features (Image, Link, loading strategies)\n" +
-        "- Handling state management, forms, and user interactions\n" +
-        "- Creating accessible and SEO-friendly components\n" +
-        "- Following React best practices and clean code principles\n\n" +
-        "When creating components, always:\n" +
-        "- Use TypeScript with proper type definitions\n" +
-        "- Include proper error handling and loading states\n" +
-        "- Make components responsive and accessible\n" +
-        "- Follow Next.js 14+ conventions and App Router patterns\n" +
-        "- Provide clean, well-documented code with comments\n" +
-        "- Consider performance and bundle size optimization",
-      model: openai({ model: "gpt-4o" }),
+      name: "coder-agent",
+      description: "A code generation agent",
+      system: PROMPT,
+      model: openai({
+        model: "gpt-4.1",
+        defaultParameters: {
+          temperature: 0.1,
+        },
+      }),
+      tools: [
+        createTool({
+          name: "terminal",
+          description: "use the terminal to run commands",
+          parameters: z.object({
+            command: z.string(),
+          }),
+          handler: async ({ command }, { step }) => {
+            return await step?.run("terminal", async () => {
+              let buffer = { stdout: "", stderr: "" };
+
+              try {
+                const sandbox = await getSandbox(sandboxId);
+                const result = await sandbox.commands.run(command, {
+                  onStdout: (data: string) => {
+                    buffer.stdout += data;
+                  },
+                  onStderr: (data: string) => {
+                    buffer.stderr += data;
+                  },
+                });
+
+                return result.stdout;
+              } catch (error) {
+                console.log(
+                  `Command failed: ${error} \nstdout: ${buffer.stdout} \nstderr: ${buffer.stderr}`
+                );
+                return `Command failed: ${error} \nstdout: ${buffer.stdout} \nstderr: ${buffer.stderr}`;
+              }
+            });
+          },
+        }),
+        createTool({
+          name: "createOrUpdateFiles",
+          description: "Create or update files in the sandbox environment",
+          parameters: z.object({
+            files: z.array(
+              z.object({
+                path: z.string(),
+                content: z.string(),
+              })
+            ),
+          }) as any,
+          handler: async ({ files }, { step, network }) => {
+            const newFiles = await step?.run(
+              "createOrUpdateFiles",
+              async () => {
+                try {
+                  const updatedFiles = network.state.data.files || {};
+                  const sandbox = await getSandbox(sandboxId);
+
+                  for (const file of files) {
+                    await sandbox.files.write(file.path, file.content);
+                    updatedFiles[file.path] = file.content;
+                  }
+
+                  return updatedFiles;
+                } catch (error) {
+                  console.error(`Error updating files: ${error}`);
+                  return `Error updating files: ${error}`;
+                }
+              }
+            );
+
+            if (typeof newFiles === "object") {
+              network.state.data.files = newFiles;
+            }
+          },
+        }),
+        createTool({
+          name: "readFiles",
+          description: "Read files from the sandbox environment",
+          parameters: z.object({
+            files: z.array(z.string()),
+          }) as any,
+          handler: async ({ files }, { step, network }) => {
+            return await step?.run("readFiles", async () => {
+              try {
+                const sandbox = await getSandbox(sandboxId);
+                let contents = [];
+
+                for (const file of files) {
+                  const content = await sandbox.files.read(file);
+                  contents.push(content);
+                }
+                return JSON.stringify(contents);
+              } catch (error) {
+                console.error(`Error reading files: ${error}`);
+                return `Error reading files: ${error}`;
+              }
+            });
+          },
+        }),
+      ],
+      lifecycle: {
+        async onResponse({ result, network }) {
+          const lastAssestantTextMessage =
+            await lastAssestantTextMessageContent(result);
+
+          if (lastAssestantTextMessage && network) {
+            if (lastAssestantTextMessage.includes("<task_summary>")) {
+              network.state.data.summary = lastAssestantTextMessage;
+            }
+          }
+
+          return result;
+        },
+      },
     });
 
-    const { output } = await codeAgent.run(
-      `Summarize the following text: ${event.data.message}`
-    );
+    const network = createNetwork({
+      name: "code-agent-network",
+      agents: [codeAgent],
+      maxIter: 15,
+      router: async ({ network }) => {
+        const summary = network.state.data.summary;
+
+        if (summary) {
+          return;
+        }
+
+        return codeAgent;
+      },
+    });
+
+    const result = await network.run(event.data.message);
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
@@ -47,8 +165,11 @@ export const chat = inngest.createFunction(
       return `http://${host}`;
     });
 
-    console.log(output);
-
-    return { output, sandboxUrl };
+    return {
+      url: sandboxUrl,
+      title: "Fragment",
+      files: result.state.data.files,
+      summary: result.state.data.summary,
+    };
   }
 );
