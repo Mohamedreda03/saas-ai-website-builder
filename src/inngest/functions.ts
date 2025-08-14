@@ -107,7 +107,7 @@ export const chat = inngest.createFunction(
           parameters: z.object({
             files: z.array(z.string()),
           }) as any,
-          handler: async ({ files }, { step, network }) => {
+          handler: async ({ files }, { step }) => {
             return await step?.run("readFiles", async () => {
               try {
                 const sandbox = await getSandbox(sandboxId);
