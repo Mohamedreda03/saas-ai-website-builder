@@ -18,7 +18,7 @@ An intelligent AI-powered website builder that generates Next.js components and 
 
 ### Frontend
 
-- **Next.js 15.3.3** - React framework with App Router
+- **Next.js V15** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first CSS framework
 - **shadcn/ui** - Modern React component library
@@ -26,7 +26,7 @@ An intelligent AI-powered website builder that generates Next.js components and 
 
 ### AI & Execution
 
-- **OpenAI GPT-4** - Large language model for code generation
+- **OpenAI GPT-4.1** - Large language model for code generation
 - **Inngest AgentKit** - AI agent orchestration and workflow management
 - **E2B Code Interpreter** - Secure sandbox environment for code execution
 - **Zod** - Schema validation
@@ -42,9 +42,9 @@ An intelligent AI-powered website builder that generates Next.js components and 
 
 - Node.js 18+
 - npm
-- E2B API key
 - OpenAI API key
-- Inngest account
+- E2B API key
+- PostgreSQL database (recommended: Neon)
 
 ### Installation
 
@@ -63,13 +63,27 @@ npm install
 
 3. **Set up environment variables**
 
+Create a `.env` file in the root directory:
+
 ```env
-# .env.local
-E2B_API_KEY=your_e2b_api_key
-OPENAI_API_KEY=your_openai_api_key
-INNGEST_SIGNING_KEY=your_inngest_signing_key
-INNGEST_EVENT_KEY=your_inngest_event_key
+# Database (PostgreSQL/Neon)
+DATABASE_URL="your_database_connection_string"
+
+# Application URL
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# OpenAI API Key (for AI code generation)
+OPENAI_API_KEY="your_openai_api_key"
+
+# E2B API Key (for sandbox environments)
+E2B_API_KEY="your_e2b_api_key"
 ```
+
+> **Note**: Get your API keys from:
+>
+> - [OpenAI Platform](https://platform.openai.com/api-keys)
+> - [E2B Dashboard](https://e2b.dev/dashboard)
+> - [Neon Console](https://console.neon.tech/) for database
 
 4. **Run the development server**
 
@@ -158,27 +172,3 @@ Modify components in `src/components/ui/` or add custom components.
 - [shadcn/ui](https://ui.shadcn.com/) - Component library
 - [OpenAI API](https://platform.openai.com/docs) - AI model integration
 - [Cursor Agent Mode Tutorial](https://e2b.dev/blog/replicating-cursors-agent-mode-with-e2b-and-agentkit) - Implementation inspiration
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **E2B Team** for the excellent sandbox infrastructure
-- **Inngest Team** for the powerful agent framework
-- **Cursor Team** for the inspiration
-- **Vercel Team** for Next.js and deployment platform
-- **shadcn** for the beautiful UI components
-
----
-
-**Built with ❤️ using AI and modern web technologies**
