@@ -8,6 +8,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Project {
+  id   String @id @default(cuid())
+  name String
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum MessageRole {
   USER
   ASSISTANT
@@ -19,12 +29,14 @@ enum MessageType {
 }
 
 model Message {
-  id      String      @id @default(cuid())
-  role    MessageRole
-  type    MessageType
-  content String
+  id        String      @id @default(cuid())
+  role      MessageRole
+  type      MessageType
+  content   String
+  projectId String
 
   fragment Fragment?
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
