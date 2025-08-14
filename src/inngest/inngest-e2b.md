@@ -29,9 +29,9 @@ User Input → Inngest Function → AI Agent → E2B Sandbox → Live Preview
 ### 1. Main Function Structure
 
 ```typescript
-export const chat = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
+export const codeAgent = inngest.createFunction(
+  { id: "code.agent" },
+  { event: "run/code.agent" },
   async ({ event, step }) => {
     // Implementation
   }

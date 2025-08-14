@@ -1,8 +1,10 @@
 import {
+  gemini,
   openai,
   createAgent,
   createTool,
   createNetwork,
+  type Tool,
 } from "@inngest/agent-kit";
 
 import { Sandbox } from "@e2b/code-interpreter";
@@ -11,10 +13,16 @@ import { inngest } from "./client";
 import { getSandbox, lastAssestantTextMessageContent } from "./utils";
 import { PROMPT } from "@/prompt";
 import { z } from "zod";
+import prisma from "@/lib/db";
 
-export const chat = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
+interface AgentState {
+  summary: string;
+  files: { [key: string]: string };
+}
+
+export const codeAgentFunction = inngest.createFunction(
+  { id: "code.agent" },
+  { event: "run/code.agent" },
   async ({ event, step }) => {
     const sandboxId = await step.run("get-sandbox-id", async () => {
       const sandbox = await Sandbox.create("tlahv91cck2pgvg72m7v");
@@ -22,15 +30,18 @@ export const chat = inngest.createFunction(
       return sandbox.sandboxId;
     });
 
-    const codeAgent = createAgent({
+    const codeAgent = createAgent<AgentState>({
       name: "coder-agent",
       description: "A code generation agent",
       system: PROMPT,
-      model: openai({
-        model: "gpt-4.1",
-        defaultParameters: {
-          temperature: 0.1,
-        },
+      // model: openai({
+      //   model: "gpt-4.1",
+      //   defaultParameters: {
+      //     temperature: 0.1,
+      //   },
+      // }),
+      model: gemini({
+        model: "gemini-2.5-flash",
       }),
       tools: [
         createTool({
@@ -75,7 +86,10 @@ export const chat = inngest.createFunction(
               })
             ),
           }) as any,
-          handler: async ({ files }, { step, network }) => {
+          handler: async (
+            { files },
+            { step, network }: Tool.Options<AgentState>
+          ) => {
             const newFiles = await step?.run(
               "createOrUpdateFiles",
               async () => {
@@ -142,7 +156,7 @@ export const chat = inngest.createFunction(
       },
     });
 
-    const network = createNetwork({
+    const network = createNetwork<AgentState>({
       name: "code-agent-network",
       agents: [codeAgent],
       maxIter: 15,
@@ -157,12 +171,43 @@ export const chat = inngest.createFunction(
       },
     });
 
-    const result = await network.run(event.data.message);
+    const result = await network.run(event.data.value);
+
+    const isError =
+      !result.state.data.summary ||
+      Object.keys(result.state.data.files || {}).length === 0;
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
       const host = sandbox.getHost(3000);
       return `http://${host}`;
+    });
+
+    await step.run("save-result", async () => {
+      if (isError) {
+        return prisma.message.create({
+          data: {
+            content: "Something went wrong. Please try again later.",
+            type: "ERROR",
+            role: "ASSISTANT",
+          },
+        });
+      }
+
+      return prisma.message.create({
+        data: {
+          content: result.state.data.summary,
+          type: "RESULT",
+          role: "ASSISTANT",
+          fragment: {
+            create: {
+              title: "Fragment",
+              sandboxUrl: sandboxUrl,
+              files: result.state.data.files,
+            },
+          },
+        },
+      });
     });
 
     return {
