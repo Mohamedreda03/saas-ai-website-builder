@@ -19,6 +19,7 @@ export function MessagesContainer({
   activeFragment,
   setActiveFragment,
 }: Props) {
+  const lastAssistantMessageRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const trpc = useTRPC();
   const { data: messages } = useSuspenseQuery(
@@ -34,15 +35,19 @@ export function MessagesContainer({
   );
 
   // TODO: This is causing a problems
-  // useEffect(() => {
-  //   const lastAssistantMessageWithFragment = messages.findLast(
-  //     (message) => message.role === "ASSISTANT" && !!message.fragment
-  //   );
+  useEffect(() => {
+    const lastAssistantMessage = messages.findLast(
+      (message) => message.role === "ASSISTANT"
+    );
 
-  //   if (lastAssistantMessageWithFragment) {
-  //     setActiveFragment(lastAssistantMessageWithFragment.fragment);
-  //   }
-  // }, [messages, setActiveFragment]);
+    if (
+      lastAssistantMessage?.fragment &&
+      lastAssistantMessageRef.current !== lastAssistantMessage.id
+    ) {
+      setActiveFragment(lastAssistantMessage.fragment);
+      lastAssistantMessageRef.current = lastAssistantMessage.id;
+    }
+  }, [messages, setActiveFragment]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView();
@@ -54,8 +59,8 @@ export function MessagesContainer({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex min-h-0 overflow-y-auto">
-        <div className="pt-2 pr-1">
+      <div className="flex flex-1 min-h-0 overflow-y-auto">
+        <div className="pt-2 pr-1 flex-1">
           {messages.map((message) => (
             <MessageCard
               key={message.id}
