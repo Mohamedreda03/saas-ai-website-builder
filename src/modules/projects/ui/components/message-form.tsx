@@ -8,8 +8,10 @@ import { useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { ArrowUpIcon, Loader2Icon } from "lucide-react";
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Usage from "./usage";
+import { useRouter } from "next/navigation";
 
 interface MessageFormProps {
   projectId: string;
@@ -23,11 +25,14 @@ type FormSchemaType = z.infer<typeof formSchmea>;
 
 export default function MessageForm({ projectId }: MessageFormProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const showUsage = false;
 
+  const router = useRouter();
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const trpc = useTRPC();
+  const { data: usage } = useQuery(trpc.usage.status.queryOptions());
+  const showUsage = !!usage;
+
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchmea),
     defaultValues: {
@@ -49,9 +54,10 @@ export default function MessageForm({ projectId }: MessageFormProps) {
       },
 
       onError: (error) => {
-        // TODO: Redirect to pricing page if specific error
-
         toast.error(error.message);
+        if (error.data?.code === "TOO_MANY_REQUESTS") {
+          router.push("/pricing");
+        }
       },
     })
   );
@@ -68,6 +74,12 @@ export default function MessageForm({ projectId }: MessageFormProps) {
 
   return (
     <Form {...form}>
+      {showUsage && (
+        <Usage
+          points={usage.remainingPoints}
+          msBeforeNext={usage.msBeforeNext}
+        />
+      )}
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className={cn(

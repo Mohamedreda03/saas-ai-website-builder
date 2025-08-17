@@ -47,19 +47,24 @@ export default function ProjectForm() {
       onSuccess(data) {
         form.reset();
         queryClient.invalidateQueries(trpc.projects.getMany.queryOptions());
+        queryClient.invalidateQueries(trpc.usage.status.queryOptions());
 
         router.push(`/projects/${data.id}`);
-        // TODO: revalidate usage status
       },
 
       onError: (error) => {
         toast.error(error.message);
+
         if (error.data?.code === "UNAUTHORIZED") {
           clerk.openSignIn({
             appearance: {
               theme: currentTheme === "dark" ? dark : undefined,
             },
           });
+        }
+
+        if (error.data?.code === "TOO_MANY_REQUESTS") {
+          router.push("/pricing");
         }
       },
     })
