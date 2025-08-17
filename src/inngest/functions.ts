@@ -13,7 +13,7 @@ import { Sandbox } from "@e2b/code-interpreter";
 
 import { inngest } from "./client";
 import { getSandbox, lastAssestantTextMessageContent } from "./utils";
-import { PROMPT } from "@/prompt";
+import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "@/prompt";
 import { z } from "zod";
 import prisma from "@/lib/db";
 
@@ -212,6 +212,45 @@ export const codeAgentFunction = inngest.createFunction(
 
     const result = await network.run(event.data.value, { state });
 
+    const fragmentTitleGenerator = createAgent({
+      name: "fragment-title-generator",
+      description: "Generates a title for a code fragment",
+      system: FRAGMENT_TITLE_PROMPT,
+      model: openai({
+        model: "gpt-4o",
+      }),
+    });
+
+    const responseGenerator = createAgent({
+      name: "response-generator",
+      description: "a response generator",
+      system: RESPONSE_PROMPT,
+      model: openai({
+        model: "gpt-4o",
+      }),
+    });
+
+    const { output: fragmentTitleOutput } = await fragmentTitleGenerator.run(
+      result.state.data.summary
+    );
+
+    const { output: responseOutput } = await responseGenerator.run(
+      result.state.data.summary
+    );
+
+    const parseAgentOutput = (value: Message[]) => {
+      const output = value[0];
+      if (output.type !== "text") {
+        return "Fragment";
+      }
+
+      if (Array.isArray(output.content)) {
+        return output.content.join(" ");
+      } else {
+        return output.content;
+      }
+    };
+
     const isError =
       !result.state.data.summary ||
       Object.keys(result.state.data.files || {}).length === 0;
@@ -237,12 +276,12 @@ export const codeAgentFunction = inngest.createFunction(
       return prisma.message.create({
         data: {
           projectId: event.data.projectId,
-          content: result.state.data.summary,
+          content: parseAgentOutput(responseOutput),
           type: "RESULT",
           role: "ASSISTANT",
           fragment: {
             create: {
-              title: "Fragment",
+              title: parseAgentOutput(fragmentTitleOutput),
               sandboxUrl: sandboxUrl,
               files: result.state.data.files,
             },
