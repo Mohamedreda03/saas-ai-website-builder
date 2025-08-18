@@ -79,7 +79,13 @@ const AssistantMessage = ({
       )}
     >
       <div className="flex items-center gap-2 pl-2 mb-2">
-        <Image src="/logo-sm.png" alt="Aiwa" width={18} height={18} />
+        <Image
+          src="/logo-sm.png"
+          alt="Aiwa"
+          width={18}
+          height={18}
+          className=""
+        />
         {/* <img src="/logo.png" alt="Aiwa" className="w-8 h-8" /> */}
         <span className="text-sm font-medium">Aiwa</span>
         <span className="text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
