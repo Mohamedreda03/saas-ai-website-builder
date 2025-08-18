@@ -34,12 +34,17 @@ export default function ProjectsList() {
             <Link href={`/projects/${project.id}`}>
               <div className="flex items-center gap-x-4">
                 <Image
-                  src="/logo.svg"
-                  alt="Project Logo"
+                  src="/logo-sm.png"
+                  alt="Aiwa"
                   width={32}
                   height={32}
                   className="object-contain"
                 />
+                {/* <img
+                  src="/logo-sm.png"
+                  alt="Aiwa"
+                  className="object-contain h-16 w-16"
+                /> */}
                 <div className="flex flex-col">
                   <h3 className="truncate font-medium">{project.name}</h3>
                   <p className="text-sm text-muted-foreground">

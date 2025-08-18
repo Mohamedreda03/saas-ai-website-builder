@@ -44,8 +44,9 @@ export default function ProjectHeader({ projectId }: ProjectHeaderProps) {
             size="sm"
             className="focus-visible:ring-0 hover:bg-transparent hover:opacity-75 transition-opacity pl-2!"
           >
-            <Image src="/logo.svg" alt="Vibe" width={18} height={18} />
-            <span className="text-sm font-medium mb-1">{project?.name}</span>
+            <Image src="/logo-sm.png" alt="Aiwa" width={18} height={18} />
+            {/* <img src="/logo-sm.png" alt="Aiwa" className="w-8 h-8" /> */}
+            <span className="text-sm font-medium mb-0.5">{project?.name}</span>
             <ChevronDownIcon className="size-4" />
           </Button>
         </DropdownMenuTrigger>

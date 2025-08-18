@@ -8,15 +8,21 @@ export default function Home() {
       <section className="space-y-6 py-[16vh] 2xl:py-48">
         <div className="flex flex-col items-center">
           <Image
-            src="/logo.svg"
-            alt="Vibe"
-            width={50}
-            height={50}
+            src="/logo.png"
+            alt="Aiwa"
+            width={80}
+            height={130}
+            quality={100}
             className="hidden md:block"
           />
+          {/* <img
+            src="/logo.png"
+            alt="Aiwa"
+            className="hidden md:block w-28 h-28"
+          /> */}
         </div>
         <h1 className="text-2xl md:text-5xl font-bold text-center">
-          Build something with Vibe
+          Build something with Aiwa
         </h1>
         <p className="text-center text-muted-foreground text-lg md:text-xl">
           Create apps and websites by chatting with AI.

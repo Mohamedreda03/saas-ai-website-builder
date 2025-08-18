@@ -79,8 +79,9 @@ const AssistantMessage = ({
       )}
     >
       <div className="flex items-center gap-2 pl-2 mb-2">
-        <Image src="/logo.svg" alt="Vibe" width={18} height={18} />
-        <span className="text-sm font-medium">Vibe</span>
+        <Image src="/logo-sm.png" alt="Aiwa" width={18} height={18} />
+        {/* <img src="/logo.png" alt="Aiwa" className="w-8 h-8" /> */}
+        <span className="text-sm font-medium">Aiwa</span>
         <span className="text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
           {format(createdAt, "HH:mm 'on' MMM dd, yyyy")}
         </span>

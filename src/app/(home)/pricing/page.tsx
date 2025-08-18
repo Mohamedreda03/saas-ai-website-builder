@@ -11,12 +11,17 @@ export default function PricingPage() {
     <div className="flex flex-col max-w-3xl mx-auto w-full">
       <section className="space-y-6 pt-[26vh] 2xl:pt-48">
         <div className="flex flex-col items-center">
-          <Image
+          {/* <Image
             src="/logo.svg"
-            alt="Vibe"
+            alt="Aiwa"
             width={50}
             height={50}
             className="hidden md:block"
+          /> */}
+          <img
+            src="/logo.png"
+            alt="Aiwa"
+            className="hidden md:block w-28 h-28"
           />
         </div>
         <h1 className="text-xl md:text-3xl font-bold text-center">Pricing</h1>

@@ -37,14 +37,15 @@ export default function MessageLoading() {
   return (
     <div className="flex flex-col group px-2 pb-4">
       <div className="flex items-center gap-2 pl-2 mb-2">
-        <Image
+        {/* <Image
           src="/logo.svg"
-          alt="Vibe"
+          alt="Aiwa"
           width={18}
           height={18}
           className="shrink-0"
-        />
-        <span className="text-sm font-medium">Vibe</span>
+        /> */}
+        <img src="/logo.png" alt="Aiwa" className="w-8 h-8 shrink-0" />
+        <span className="text-sm font-medium">Aiwa</span>
       </div>
       <div className="pl-8.5 flex flex-col gap-y-4">
         <ShimmerMessages />
