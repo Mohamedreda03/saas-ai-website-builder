@@ -14,13 +14,9 @@ interface FragmentWebProps {
 export default function FragmentWeb({ data }: FragmentWebProps) {
   const [copied, setCopied] = useState(false);
   const [fragmentKey, setFragmentKey] = useState(0);
-  const [iframeError, setIframeError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const onRefresh = () => {
     setFragmentKey((prev) => prev + 1);
-    setIframeError(false);
-    setIsLoading(true);
   };
 
   const onCopy = () => {
@@ -29,19 +25,6 @@ export default function FragmentWeb({ data }: FragmentWebProps) {
     toast.success("Website URL copied.");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    setIframeError(false);
-  };
-
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setIframeError(true);
-    toast.error(
-      "Failed to load preview. Try refreshing or opening in new tab."
-    );
   };
 
   return (
@@ -81,11 +64,9 @@ export default function FragmentWeb({ data }: FragmentWebProps) {
       <iframe
         key={fragmentKey}
         className="w-full h-full"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation allow-modals"
+        sandbox="allow-same-origin allow-scripts allow-forms"
         loading="lazy"
         src={data.sandboxUrl}
-        referrerPolicy="no-referrer-when-downgrade"
-        allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; usb"
       />
     </div>
   );
