@@ -72,15 +72,15 @@ export const codeAgentFunction = inngest.createFunction(
       name: "coder-agent",
       description: "A code generation agent",
       system: PROMPT,
-      model: openai({
-        model: "gpt-4.1",
-        defaultParameters: {
-          temperature: 0.1,
-        },
-      }),
-      // model: gemini({
-      //   model: "gemini-2.5-flash",
+      // model: openai({
+      //   model: "gpt-4.1",
+      //   defaultParameters: {
+      //     temperature: 0.1,
+      //   },
       // }),
+      model: gemini({
+        model: "gemini-2.5-flash",
+      }),
       tools: [
         createTool({
           name: "terminal",
@@ -210,7 +210,10 @@ export const codeAgentFunction = inngest.createFunction(
       },
     });
 
-    const result = await network.run(event.data.value, { state });
+    const result = await network.run(
+      `This is a user request: ${event.data.value}`,
+      { state }
+    );
 
     const fragmentTitleGenerator = createAgent({
       name: "fragment-title-generator",
