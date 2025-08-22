@@ -79,7 +79,7 @@ export const codeAgentFunction = inngest.createFunction(
       //   },
       // }),
       model: gemini({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-pro",
       }),
       tools: [
         createTool({
