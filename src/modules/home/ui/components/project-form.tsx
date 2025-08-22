@@ -19,7 +19,10 @@ import { useCurrentTheme } from "@/hooks/use-current-theme";
 import { dark } from "@clerk/themes";
 
 const formSchmea = z.object({
-  value: z.string().min(1, "value is required").max(10000, "value is too long"),
+  value: z
+    .string()
+    .min(1, "value is required")
+    .max(100000, "value is too long"),
 });
 
 type FormSchemaType = z.infer<typeof formSchmea>;
